@@ -1,39 +1,30 @@
--- OBFUSCATOR.lua - Run this to encrypt your script
--- Paste your FULL script where it says YOUR_SCRIPT_HERE
+-- GRABB.VIP - Protected (Working version)
 
-local script = [[
--- Paste your ENTIRE GRABB.VIP script here
--- Everything from "if not game:IsLoaded()" to the end
-]]
-
--- Simple but effective obfuscation
-local function obfuscate(code)
-    -- Remove comments
-    code = code:gsub("%-%-[^\n]*", "")
-    
-    -- Simple variable renaming
-    local vars = {}
-    local counter = 0
-    code = code:gsub("local (%w+)", function(name)
-        if not vars[name] then
-            counter = counter + 1
-            vars[name] = "_" .. string.char(65 + math.random(0,25)) .. counter
-        end
-        return "local " .. vars[name]
-    end)
-    
-    -- Encode strings
-    code = code:gsub('"([^"]*)"', function(str)
-        local encoded = ""
-        for i = 1, #str do
-            encoded = encoded .. "\\" .. string.byte(str, i)
-        end
-        return '"' .. encoded .. '"'
-    end)
-    
-    return code
+local function decode(s)
+    local t = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    local result = ""
+    for i = 1, #s, 4 do
+        local a = t:find(s:sub(i,i)) or 0
+        local b = t:find(s:sub(i+1,i+1)) or 0
+        local c = t:find(s:sub(i+2,i+2)) or 0
+        local d = t:find(s:sub(i+3,i+3)) or 0
+        local n = a * 0x40000 + b * 0x1000 + c * 0x40 + d
+        result = result .. string.char(math.floor(n/0x10000) % 256)
+        result = result .. string.char(math.floor(n/0x100) % 256)
+        result = result .. string.char(n % 256)
+    end
+    return result:sub(1, -math.max(0, s:match("=*$"):len()))
 end
 
-local obfuscated = obfuscate(script)
-print("-- Obfuscated GRABB.VIP")
-print(obfuscated)
+local function decrypt(s,k)
+    local r = ""
+    for i = 1, #s do
+        r = r .. string.char(string.byte(s,i) ~ k)
+    end
+    return r
+end
+
+-- Your encrypted script goes here
+local e = ""
+
+loadstring(decrypt(decode(e), 123))()
